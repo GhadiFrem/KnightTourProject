@@ -73,19 +73,33 @@ def plot_board(path, size, algo_name):
 
 results = []
 for size in [8]:
-    # Run all three
-    path1, n1 = dfs((0,0), size, [(0,0)], [0]), 3000
-    path2, n2 = warnsdorff_standard(size)
-    path3, n3 = warnsdorff_robust(size, start_pos=(3,3))
+    # Run all three with timing
+    start1 = time.time()
+    path1, n1 = dfs((0,0), size, [(0,0)], [0], limit=30000), 30000
+    time1 = time.time() - start1
     
-    results.append({'Algo': 'DFS (Blind)', 'Nodes': n1 if path1 else 'Failed'})
-    results.append({'Algo': 'Standard Warnsdorff', 'Nodes': n2})
-    results.append({'Algo': 'Robust Adaptive', 'Nodes': n3})
+    start2 = time.time()
+    path2, n2 = warnsdorff_standard(size)
+    time2 = time.time() - start2
+    
+    results.append({'Algo': 'DFS (Blind)', 'Nodes': n1 if path1 else 'Failed', 'Time (s)': f'{time1:.4f}', 'Start Pos': '-'})
+    results.append({'Algo': 'Standard Warnsdorff', 'Nodes': n2, 'Time (s)': f'{time2:.4f}', 'Start Pos': '(0,0)'})
+    
+    # Run Robust Adaptive with multiple starting positions
+    starting_positions = [(0,0), (1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7)]
+    robust_paths = []
+    for start_pos in starting_positions:
+        start3 = time.time()
+        path3, n3 = warnsdorff_robust(size, start_pos=start_pos)
+        time3 = time.time() - start3
+        results.append({'Algo': 'Robust Adaptive', 'Nodes': n3, 'Time (s)': f'{time3:.4f}', 'Start Pos': str(start_pos)})
+        robust_paths.append((path3, start_pos))
     
     # Plot successful tours
     if path1: plot_board(path1, size, 'DFS')
     if path2: plot_board(path2, size, 'Standard_Warnsdorff')
-    if path3: plot_board(path3, size, 'Robust_Adaptive')
+    for path3, start_pos in robust_paths:
+        if path3: plot_board(path3, size, f'Robust_Adaptive_start_{start_pos[0]}_{start_pos[1]}')
 
 pd.DataFrame(results).to_csv(os.path.join(base_dir, 'comparison.csv'), index=False)
 print("Comparison complete. Check 'comparison.csv' and PNG files in your folder.")

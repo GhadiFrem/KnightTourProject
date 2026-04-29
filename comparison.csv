@@ -1,4 +1,11 @@
-Algo,Nodes
-DFS (Blind),Failed
-Standard Warnsdorff,63
-Robust Adaptive,63
+Algo,Nodes,Time (s),Start Pos
+DFS (Blind),Failed,0.0799,-
+Standard Warnsdorff,63,0.0007,"(0,0)"
+Robust Adaptive,63,0.0007,"(0, 0)"
+Robust Adaptive,63,0.0007,"(1, 1)"
+Robust Adaptive,63,0.0007,"(2, 2)"
+Robust Adaptive,63,0.0007,"(3, 3)"
+Robust Adaptive,63,0.0007,"(4, 4)"
+Robust Adaptive,63,0.0007,"(5, 5)"
+Robust Adaptive,63,0.0007,"(6, 6)"
+Robust Adaptive,63,0.0007,"(7, 7)"
