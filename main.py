@@ -12,11 +12,11 @@
 # ============================================================
 
 import time
-import pandas as pd           # Used to save the results comparison table as a CSV
+import pandas as pd  # Used to save the results comparison table as a CSV
 import matplotlib.pyplot as plt  # Used to draw and save the board visualizations
-import numpy as np            # Used to create the 2D board grid for visualization
-import os                     # Used to build file paths that work on any OS
-import random                 # Used in the robust heuristic for random tie-breaking
+import numpy as np  # Used to create the 2D board grid for visualization
+import os  # Used to build file paths that work on any OS
+import random  # Used in the robust heuristic for random tie-breaking
 
 # Resolve the directory where this script lives, so output files are saved next to it
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,11 +35,22 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 def get_valid_moves(pos, board_size, visited):
     x, y = pos
     # All 8 possible L-shaped knight moves from (x, y)
-    moves = [(x+2,y+1), (x+2,y-1), (x-2,y+1), (x-2,y-1),
-             (x+1,y+2), (x+1,y-2), (x-1,y+2), (x-1,y-2)]
+    moves = [
+        (x + 2, y + 1),
+        (x + 2, y - 1),
+        (x - 2, y + 1),
+        (x - 2, y - 1),
+        (x + 1, y + 2),
+        (x + 1, y - 2),
+        (x - 1, y + 2),
+        (x - 1, y - 2),
+    ]
     # Filter: keep only moves that are on the board and not yet visited
-    return [(mx, my) for mx, my in moves
-            if 0 <= mx < board_size and 0 <= my < board_size and (mx, my) not in visited]
+    return [
+        (mx, my)
+        for mx, my in moves
+        if 0 <= mx < board_size and 0 <= my < board_size and (mx, my) not in visited
+    ]
 
 
 # ============================================================
@@ -64,16 +75,17 @@ def get_valid_moves(pos, board_size, visited):
 #   nodes_expanded — mutable counter [int] tracking how many nodes were explored
 #   limit          — maximum nodes to expand before giving up
 def dfs(pos, board_size, visited, nodes_expanded, limit=3000):
-    nodes_expanded[0] += 1                          # Count this node as expanded
-    if nodes_expanded[0] > limit: return None        # Abort if we hit the node limit
-    if len(visited) == board_size * board_size:      # All squares visited → success!
+    nodes_expanded[0] += 1  # Count this node as expanded
+    if nodes_expanded[0] > limit:
+        return None  # Abort if we hit the node limit
+    if len(visited) == board_size * board_size:  # All squares visited → success!
         return visited
     for move in get_valid_moves(pos, board_size, visited):
-        visited.append(move)                         # Choose this move
+        visited.append(move)  # Choose this move
         if dfs(move, board_size, visited, nodes_expanded, limit):
-            return visited                           # Propagate success upward
-        visited.pop()                               # Backtrack: undo the move
-    return None                                     # No valid move found → backtrack
+            return visited  # Propagate success upward
+        visited.pop()  # Backtrack: undo the move
+    return None  # No valid move found → backtrack
 
 
 # ============================================================
@@ -94,23 +106,23 @@ def dfs(pos, board_size, visited, nodes_expanded, limit=3000):
 # Parameters:
 #   board_size — N (board is N×N)
 def warnsdorff_standard(board_size):
-    pos = (0, 0)           # Always start from the top-left corner
-    visited = [pos]        # Track the order of visited squares
-    nodes = 0              # Count how many steps (decisions) were made
+    pos = (0, 0)  # Always start from the top-left corner
+    visited = [pos]  # Track the order of visited squares
+    nodes = 0  # Count how many steps (decisions) were made
 
     while len(visited) < board_size * board_size:
         nodes += 1
-        current = visited[-1]                                    # Current position
-        moves = get_valid_moves(current, board_size, visited)    # All valid next moves
+        current = visited[-1]  # Current position
+        moves = get_valid_moves(current, board_size, visited)  # All valid next moves
         if not moves:
-            return None, nodes                                   # Dead end — tour failed
+            return None, nodes  # Dead end — tour failed
 
         # Sort moves by how many onward moves each leads to (ascending = fewest first)
         # This is Warnsdorff's Rule: prefer the move with the least future options
         moves.sort(key=lambda m: len(get_valid_moves(m, board_size, visited + [m])))
-        visited.append(moves[0])    # Always pick the move with the fewest onward moves
+        visited.append(moves[0])  # Always pick the move with the fewest onward moves
 
-    return visited, nodes           # Return the complete tour and node count
+    return visited, nodes  # Return the complete tour and node count
 
 
 # ============================================================
@@ -132,7 +144,7 @@ def warnsdorff_standard(board_size):
 #   start_pos  — (row, col) starting square for the knight
 def warnsdorff_robust(board_size, start_pos=(3, 3)):
     pos = start_pos
-    visited = [pos]        # Start from the given position
+    visited = [pos]  # Start from the given position
     nodes = 0
 
     while len(visited) < board_size * board_size:
@@ -140,10 +152,12 @@ def warnsdorff_robust(board_size, start_pos=(3, 3)):
         current = visited[-1]
         moves = get_valid_moves(current, board_size, visited)
         if not moves:
-            return None, nodes                                   # Dead end — tour failed
+            return None, nodes  # Dead end — tour failed
 
         # Compute the degree (number of onward moves) for each candidate move
-        degrees = [(len(get_valid_moves(m, board_size, visited + [m])), m) for m in moves]
+        degrees = [
+            (len(get_valid_moves(m, board_size, visited + [m])), m) for m in moves
+        ]
 
         # Find the minimum degree among all candidates
         min_deg = min(d for d, m in degrees)
@@ -154,7 +168,7 @@ def warnsdorff_robust(board_size, start_pos=(3, 3)):
         # Randomly pick one of the best moves — this is the key difference from standard
         visited.append(random.choice(best_moves))
 
-    return visited, nodes   # Return the complete tour and node count
+    return visited, nodes  # Return the complete tour and node count
 
 
 # ============================================================
@@ -169,7 +183,8 @@ def warnsdorff_robust(board_size, start_pos=(3, 3)):
 #   size      — board dimension N
 #   algo_name — string label used in the title and filename
 def plot_board(path, size, algo_name):
-    if path is None: return   # Skip if the algorithm failed to find a tour
+    if path is None:
+        return  # Skip if the algorithm failed to find a tour
 
     # Create an N×N grid initialized to 0
     board = np.zeros((size, size))
@@ -179,16 +194,18 @@ def plot_board(path, size, algo_name):
         board[x][y] = step_num + 1
 
     plt.figure(figsize=(6, 6))
-    plt.imshow(board, cmap='Blues', interpolation='nearest')   # Color cells by step number
+    plt.imshow(
+        board, cmap="Blues", interpolation="nearest"
+    )  # Color cells by step number
 
     # Overlay the step number as text inside each cell
     for i in range(size):
         for j in range(size):
-            plt.text(j, i, int(board[i, j]), ha='center', va='center', color='black')
+            plt.text(j, i, int(board[i, j]), ha="center", va="center", color="black")
 
     plt.title(f"Knight's Tour: {algo_name} ({size}x{size})")
-    plt.savefig(os.path.join(base_dir, f'viz_{algo_name}_{size}.png'))   # Save to file
-    plt.close()   # Free memory
+    plt.savefig(os.path.join(base_dir, f"viz_{algo_name}_{size}.png"))  # Save to file
+    plt.close()  # Free memory
 
 
 # ============================================================
@@ -204,7 +221,7 @@ def plot_board(path, size, algo_name):
 
 results = []
 
-for size in [8]:   # Board size: currently only 8×8; can be extended to [5, 6, 8] etc.
+for size in [8]:  # Board size: currently only 8×8; can be extended to [5, 6, 8] etc.
 
     # --- Algorithm 1: DFS ---
     # nodes_expanded is passed as a mutable list [0] so the recursive function can update it
@@ -219,15 +236,21 @@ for size in [8]:   # Board size: currently only 8×8; can be extended to [5, 6, 
 
     # Record results for the comparison table
     # DFS shows 'Failed' in the Nodes column if it didn't find a complete tour
-    results.append({'Algo': 'DFS (Blind)',         'Nodes': n1 if path1 else 'Failed'})
-    results.append({'Algo': 'Standard Warnsdorff', 'Nodes': n2})
-    results.append({'Algo': 'Robust Adaptive',     'Nodes': n3})
+    results.append({"Algo": "DFS (Blind)", "Nodes": n1 if path1 else "Failed"})
+    results.append({"Algo": "Standard Warnsdorff", "Nodes": n2})
+    results.append({"Algo": "Robust Adaptive", "Nodes": n3})
 
     # Save board images only for successful tours
-    if path1: plot_board(path1, size, 'DFS')
-    if path2: plot_board(path2, size, 'Standard_Warnsdorff')
-    if path3: plot_board(path3, size, 'Robust_Adaptive')
+    if path1:
+        plot_board(path1, size, "DFS")
+    if path2:
+        plot_board(path2, size, "Standard_Warnsdorff")
+    for path3, start_pos in robust_paths:
+        if path3:
+            plot_board(
+                path3, size, f"Robust_Adaptive_start_{start_pos[0]}_{start_pos[1]}"
+            )
 
 # Export the comparison table to a CSV file for analysis
-pd.DataFrame(results).to_csv(os.path.join(base_dir, 'comparison.csv'), index=False)
+pd.DataFrame(results).to_csv(os.path.join(base_dir, "comparison.csv"), index=False)
 print("Comparison complete. Check 'comparison.csv' and PNG files in your folder.")
