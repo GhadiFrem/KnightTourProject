@@ -13,7 +13,7 @@ def get_valid_moves(pos, board_size, visited):
              (x+1,y+2), (x+1,y-2), (x-1,y+2), (x-1,y-2)]
     return [(mx, my) for mx, my in moves if 0 <= mx < board_size and 0 <= my < board_size and (mx, my) not in visited]
 
-# 1. Blind Search (DFS)
+#  Blind Search (DFS)
 def dfs(pos, board_size, visited, nodes_expanded, limit=3000):
     nodes_expanded[0] += 1
     if nodes_expanded[0] > limit: return None
@@ -24,7 +24,7 @@ def dfs(pos, board_size, visited, nodes_expanded, limit=3000):
         visited.pop()
     return None
 
-# 2. Standard Heuristic (Warnsdorff's)
+# Standard Heuristic (Warnsdorff's)
 def warnsdorff_standard(board_size):
     pos = (0, 0)
     visited = [pos]
@@ -38,7 +38,7 @@ def warnsdorff_standard(board_size):
         visited.append(moves[0])
     return visited, nodes
 
-# 3. Robust Adaptive Heuristic (Warnsdorff with Random Tie-Breaking)
+# Robust Adaptive Heuristic (Warnsdorff with Random Tie-Breaking)
 def warnsdorff_robust(board_size, start_pos=(3, 3)):
     pos = start_pos
     visited = [pos]
